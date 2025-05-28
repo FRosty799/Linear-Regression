@@ -1,49 +1,36 @@
 import pandas as pd
+import seaborn as sns
 import matplotlib.pyplot as plt
+import statsmodels.api as sm
 
+# Load data
 data = pd.read_csv('Student_Marks.csv')
 
-#print(data)
-
-#plt.scatter(data.time_study, data.Marks)
-#plt.show()
-
-def loss_function(m, b, points):
-    total_error = 0
-    for i in range(len(points)):
-        x = points.iloc[i].time_study
-        y = points.iloc[i].Marks
-        total_error += (y - (m * x + b)) ** 2
-    total_error / float(len(points))
-
-def gradient_descent(m_now, b_now, points, L):
-    m_gradient = 0
-    b_gradient = 0
-    n = len(points)
-
-    for i in range(n):
-        x = points.iloc[i].time_study
-        y = points.iloc[i].Marks
-
-        m_gradient += -(2/n) * x * (y - (m_now * x + b_now))
-        b_gradient += -(2/n) * (y - (m_now * x + b_now))
-
-    m = m_now - m_gradient * L
-    b = b_now - b_gradient * L
-    return m, b
-    
-m = 0
-b = 0
-L = 0.01
-epochs = 200
-
-for i in range(epochs):
-    if i % 50 == 0:
-        print(f"Epoch: {i}")
-    m, b = gradient_descent(m, b, data, L)
-
-print(m, b)
-
-plt.scatter(data.time_study, data.Marks, color="black")
-plt.plot(list(range(0, 10)), [m * x + b for x in range(0, 10)], color="red")
+# --- Heatmap Korelasi ---
+plt.figure(figsize=(6, 4))
+sns.heatmap(data.corr(), annot=True, cmap='coolwarm', fmt='.2f')
+plt.title('Correlation Heatmap')
 plt.show()
+
+# --- Scatter Plot + OLS Regression Line ---
+plt.figure(figsize=(8, 5))
+sns.scatterplot(x='time_study', y='Marks', data=data, color='black', label='Data Points')
+
+# Menambahkan garis OLS secara manual
+X = data['time_study']
+y = data['Marks']
+X_ols = sm.add_constant(X)  # tambahkan intercept (konstanta)
+
+model = sm.OLS(y, X_ols).fit()
+predictions = model.predict(X_ols)
+
+# Garis regresi
+plt.plot(X, predictions, color='red', label='OLS Regression Line')
+plt.xlabel('Time Study (hours)')
+plt.ylabel('Marks')
+plt.title('Scatter Plot with OLS Regression Line')
+plt.legend()
+plt.show()
+
+# --- Ringkasan model OLS ---
+print(model.summary())
